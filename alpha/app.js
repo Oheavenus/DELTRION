@@ -2,8 +2,15 @@
 const boot = function boot({root,createGame,robotSVG,storage,download,confirmReset,makeId,schedule=(fn,ms)=>setTimeout(fn,ms),reducedMotion=()=>false,clock=()=>Date.now(),timerSchedule=(fn,ms)=>setTimeout(fn,ms),botChoose=null,botPolicy="practice-v1",botRng=Math.random}){
  const colors={red:{name:"赤",hex:"#f86c71",shade:"#733043",style:"mono",ability:"通常勝利：2ダメージ"},blue:{name:"青",hex:"#57baff",shade:"#244e79",style:"hero",ability:"パー・虹勝利：2、グー勝利：回復1"},yellow:{name:"黄",hex:"#ffd369",shade:"#8f6721",style:"brave",ability:"各ラウンド初手勝利：3ダメージ"},green:{name:"緑",hex:"#56e1a5",shade:"#296851",style:"blade",ability:"機体戦最初の通常あいこ：追加1ダメージ"},purple:{name:"紫",hex:"#c192ff",shade:"#5a3780",style:"cute",ability:"通常勝利：回復1、HP3以下でハイパー"}};
  const names={rock:"グー",scissors:"チョキ",paper:"パー",rainbow:"虹"};
+ const skills={
+  red:["正義の心","通常の手で勝つと、相手に2ダメージ。"],
+  blue:["今だ！","パー・虹で勝つと2ダメージ。グーで勝つとHPを1回復。"],
+  yellow:["スピードスター","各ラウンドの1手目に通常の手で勝つと、相手に3ダメージ。"],
+  green:["俺が守る…","機体戦で最初の通常あいこ時、相手へのダメージが1増える（相手2、自分1が基本）。"],
+  purple:["ハートフルモード","通常の手で勝つとHPを1回復。HP3以下でハイパー化し、その機体戦中の通常勝利は2ダメージ。"]
+ };
  const key="robot-janken-alpha-logs-v1";let game=null,who=0,cover=false,draft=[],draftSlots=[],saved=[],storageWarning="",consent=false,recorded=false;
- let playback=null,revealed=[],epoch=0,mode="local";
+ let playback=null,revealed=[],epoch=0,mode="local",info=null;
  const playerLabel=i=>mode==="local-bot"?(i===0?"YOU":"BOT"):"P"+(i+1);
  const limits={roster:30,deploy:30,hands:30};let timer=null,timerToken=0;
  try{const prev=JSON.parse(storage.getItem(key)||"[]");if(Array.isArray(prev))saved=prev}catch{storageWarning="ブラウザ保存が利用できません。終了時にJSONを保存してください。"}
@@ -61,7 +68,7 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
    if(!metadata&&timer&&clock()>=timer.deadline){timeoutCurrent();return}
    const value=metadata?.value??(p==="deploy"?draft[0]:draft);
    if(!game.legal(who,value))return;
-   stopTimer();
+   stopTimer();info=null;
    game.submit(who,value,metadata&&{timeout:true,limitSeconds:limits[p],alreadySelected:metadata.alreadySelected,autoFilled:metadata.filled.length});
    draft=[];draftSlots=[];
    if(game.view().phase===p){who=1-who;cover=true}else{who=0;cover=false;if(selectPhase() in limits)enterSelection()}
@@ -109,7 +116,15 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
   return ["normal","通常"];
  }
  function battleHeader(v){
-  return `<div class="arena">${[0,1].map(i=>{const c=colors[v.colors[i]],l=playback?.after?.last,stage=playback?.stage,pose=stage==="charge"?"charge":stage==="blast"?(l?.winner===i||l?.winner===null?"attack":"hit"):stage==="repair"?(l?.actualHeal[i]>0?"heal":v.hp[i]===0?"lose":l?.damage[1-i]>0?"hit":"idle"):v.hp[i]===0?"lose":"idle";return `<section class="pilot ${v.hyper[i]?"hyper":""} pose-${pose}" style="--chassis:${c?.hex||"#78899b"}"><b>${playerLabel(i)} ・ ${c?.name||"出撃待ち"}</b><div class="score" aria-label="${v.wins[i]}勝">${[0,1].map(k=>`<i class="win-pip ${k<v.wins[i]?"won":""}" aria-hidden="true"></i>`).join("")}</div>${c?robotSVG(c,v.hp[i],{side:i,pose}):""}<div class="hp" aria-label="HP ${v.hp[i]}">${Array.from({length:5},(_,k)=>`<span class="${k<v.hp[i]?"on":""}"></span>`).join("")}</div><div class="rights">${v.rainbow[i]==="ready"?'<span class="rainbow-dot" role="img" aria-label="虹の使用権あり" title="虹の使用権あり"></span>':""}${v.hyper[i]?"<span class='gold-label' role='img' aria-label='ハイパー化' title='ハイパー化'>✦</span>":""}</div></section>`}).join('<span class="vs">VS</span>')}${combatFX()}</div>`;
+  return `<div class="arena-info-wrap"><div class="arena">${[0,1].map(i=>{const c=colors[v.colors[i]],l=playback?.after?.last,stage=playback?.stage,pose=stage==="charge"?"charge":stage==="blast"?(l?.winner===i||l?.winner===null?"attack":"hit"):stage==="repair"?(l?.actualHeal[i]>0?"heal":v.hp[i]===0?"lose":l?.damage[1-i]>0?"hit":"idle"):v.hp[i]===0?"lose":"idle";return `<section class="pilot ${v.hyper[i]?"hyper":""} pose-${pose}" style="--chassis:${c?.hex||"#78899b"}"><b>${playerLabel(i)} ・ ${c?.name||"出撃待ち"}</b><div class="score" aria-label="${v.wins[i]}勝">${[0,1].map(k=>`<i class="win-pip ${k<v.wins[i]?"won":""}" aria-hidden="true"></i>`).join("")}</div>${c?(playback?robotSVG(c,v.hp[i],{side:i,pose}):`<button type="button" class="mech-info-trigger" data-action="skill" data-value="${i}" aria-label="${playerLabel(i)} ${c.name}のスキル" aria-expanded="${info==="skill-"+i}">${robotSVG(c,v.hp[i],{side:i,pose})}</button>`):""}<div class="hp" aria-label="HP ${v.hp[i]}">${Array.from({length:5},(_,k)=>`<span class="${k<v.hp[i]?"on":""}"></span>`).join("")}</div><div class="rights">${v.rainbow[i]==="ready"?'<span class="rainbow-dot" role="img" aria-label="虹の使用権あり" title="虹の使用権あり"></span>':""}${v.hyper[i]?"<span class='gold-label' role='img' aria-label='ハイパー化' title='ハイパー化'>✦</span>":""}</div></section>`}).join('<span class="vs">VS</span>')}${combatFX()}</div>${[0,1].map(i=>!playback&&info==="skill-"+i&&v.colors[i]?skillWindow(v.colors[i],i):"").join("")}</div>`;
+ }
+ function skillWindow(color,i){
+  const [name,desc]=skills[color],c=colors[color];
+  return `<button type="button" data-action="close-info" class="info-window skill-window side-${i}" style="--info-accent:${c.hex}" aria-label="${name}。 ${desc}。閉じる"><span class="skill-name">${name}</span><span class="skill-desc">${desc}</span></button>`;
+ }
+ function deckInfo(v){
+  const total=v.remaining.reduce((a,b)=>a+b,0);
+  return `<div class="deck-info-wrap"><button type="button" data-action="deck-info" class="deck-count" aria-label="残りデッキ ${total}枚の内訳" aria-expanded="${info==="deck"}"><span class="deck-symbol" aria-hidden="true"></span>${total}</button>${info==="deck"?`<button type="button" data-action="close-info" class="info-window deck-window" aria-label="${["rock","scissors","paper"].map((h,i)=>names[h]+" 残り"+v.remaining[i]+"/5").join("、")}。閉じる">${["rock","scissors","paper"].map((h,i)=>`<span class="deck-item" data-hand="${h}">${handIcon(h)}<span class="deck-fraction">${v.remaining[i]}/5</span></span>`).join("")}</button>`:""}</div>`;
  }
  function combatFX(){
   if(!playback?.after)return "";
@@ -163,7 +178,7 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
  }
  function beginCombat(){
   if(cover||playback||game.view().phase!=="resolve")return;
-  epoch++;revealed=[];runHand();
+  epoch++;revealed=[];info=null;runHand();
  }
  function roster(v){return `<div class="rosters">${v.rosters.map((r,i)=>`<div>${playerLabel(i)}：${r.map(c=>`<span style="color:${colors[c].hex};${v.used[i].includes(c)?"text-decoration:line-through;opacity:.5":""}">${colors[c].name}</span>`).join(" / ")}</div>`).join("")}</div>`}
  function cards(v){return `<div class="caption">共有カード（全員同じ）</div><div class="offer">${v.offer.map(h=>`<div class="card">${handIcon(h)}<small>${names[h]}</small></div>`).join("")}</div><div class="caption">残りデッキ ${v.remaining.reduce((a,b)=>a+b,0)}枚</div>`}
@@ -171,7 +186,7 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
   return `<span class="sr-only">公開された5枚から、使う順に札をタップ</span><div class="offer selectable-offer">${v.offer.map((h,i)=>{
    const selected=draftSlots.indexOf(i),[t,label]=tone(v,who,h,selected<0?draft.length:selected);
    return button("card",`${handIcon(h,v.colors[who],i,t)}<span class="sr-only">${names[h]}・${label}${selected>=0?"・"+(selected+1)+"手目":""}</span>${t==="heal"||t==="gold"?'<span class="ability-mark heal-mark" aria-hidden="true">+</span>':t==="strong"?'<span class="ability-mark strong-mark" aria-hidden="true">✦</span>':label==="あいこ強化"?'<span class="ability-mark tie-mark" aria-hidden="true">Ⅱ</span>':""}${selected>=0?`<span class="slot-order" aria-hidden="true">${selected+1}</span>`:""}`,i,selected>=0||draft.length>=3,"card choice "+t+(selected>=0?" picked":""));
-  }).join("")}</div><div class="deck-count" aria-label="残りデッキ ${v.remaining.reduce((a,b)=>a+b,0)}枚"><span class="deck-symbol" aria-hidden="true"></span>${v.remaining.reduce((a,b)=>a+b,0)}</div>`;
+  }).join("")}</div>${deckInfo(v)}`;
  }
  function rainbowChoice(v){
   const selected=draftSlots.includes(-1),status=v.rainbow[who],off=draft.length>=3||status!=="ready"||selected;
@@ -195,17 +210,26 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
     const isRoster=v.phase==="roster",avail=isRoster?Object.keys(colors):v.rosters[who].filter(c=>!v.used[who].includes(c));
     body=`${isRoster?"":roster(v)+battleHeader(v)}<h2>${playerLabel(who)}：${isRoster?"3機編成":"出撃機体を選択"}</h2><p class="caption">${isRoster?`${draft.length}/3 機を選択`:"両者の確定後に公開"}</p><div class="mech-select">${avail.map(c=>button("select",`${robotSVG(colors[c],5)}<b>${colors[c].name}</b><small>${colors[c].ability}</small>`,c,false,draft.includes(c)?"selected":"")).join("")}</div>${button("submit","OK","",!game.legal(who,isRoster?draft:draft[0]),"primary confirm-wide")}`;
    }else if(v.phase==="hands"){
-    body=`${battleHeader(v)}${roster(v)}<h2 class="selection-title">${playerLabel(who)} <span class="sr-only">3手を登録</span> <span>（${draft.length}/3）</span></h2>${selectableCards(v)}<span class="sr-only">登録順（左から解決）</span><div class="register-row"><div class="sequence">${[0,1,2].map(k=>draft[k]?`<div class="card ${tone(v,who,draft[k],k)[0]}">${handIcon(draft[k],v.colors[who],k,tone(v,who,draft[k],k)[0])}<span class="sr-only">${k+1}手目 ${names[draft[k]]}</span></div>`:`<div class="empty">${k+1}</div>`).join("")}</div>${rainbowChoice(v)}</div><div class="register-actions">${button("undo","1手戻す","",!draft.length)}${button("submit","OK","",!game.legal(who,draft),"primary confirm-wide")}</div>`;
+    body=`${battleHeader(v)}${roster(v)}<h2 class="selection-title">${playerLabel(who)} <span class="sr-only">3手を登録</span> <span>（${draft.length}/3）</span></h2>${selectableCards(v)}<span class="sr-only">登録順（左から解決）</span><div class="register-row"><div class="sequence">${[0,1,2].map(k=>draft[k]?`<div class="card ${tone(v,who,draft[k],k)[0]}">${handIcon(draft[k],v.colors[who],k,tone(v,who,draft[k],k)[0])}<span class="sr-only">${k+1}手目 ${names[draft[k]]}</span></div>`:`<div class="empty">${k+1}</div>`).join("")}</div>${rainbowChoice(v)}</div><div class="register-actions">${button("undo",'<span aria-hidden="true" class="undo-arrow">↶</span><span class="sr-only">1手戻す</span>',"",!draft.length,"undo-compact")}${button("submit","OK","",!game.legal(who,draft),"primary confirm-wide")}</div>`;
    }else{
     body=`${battleHeader(v)}${roster(v)}<h2>${v.phase==="battle_result"?"機体戦 "+resultLabel(v.battleResult.winner):v.phase==="round_result"?"ROUND "+v.round+" 完了":"両者の登録完了"}</h2>${roundBoard(v)}${readout(revealed.at(-1))}${v.phase==="resolve"?button("fight","戦闘開始","","","primary"):button("advance",v.phase==="battle_result"?"次の機体戦":"次のラウンド","","","primary")}`;
    }
   }
-  const v=game?.view();root.innerHTML=`<header><strong class="deltrion-title"><span>電脳拳士</span> DELTRION</strong><small>LOCAL α 0.1.9</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`;
+  const v=game?.view();root.innerHTML=`<header><strong class="deltrion-title"><span>電脳拳士</span> DELTRION</strong><small>LOCAL α 0.1.10</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`;
  }
  root.addEventListener("click",e=>{
   const b=e.target.closest("button[data-action]");if(!b||b.disabled)return;const {action,value}=b.dataset;
   if(playback)return;
   if(timer&&clock()>=timer.deadline){timeoutCurrent();return}
+  if(action==="deck-info"||action==="skill"||action==="close-info"){
+   if(!game||cover)return;
+   const v=game.view(who);
+   if(action==="deck-info"&&v.phase==="hands")info=info==="deck"?null:"deck";
+   else if(action==="skill"&&["0","1"].includes(value)&&v.colors[Number(value)])info=info==="skill-"+value?null:"skill-"+value;
+   else if(action==="close-info")info=null;
+   render();return;
+  }
+  info=null;
   switch(action){
    case "start-bot":if(!botChoose)return;
    case "start":stopTimer();epoch++;revealed=[];mode=action==="start-bot"?"local-bot":"local";consent=value==="yes";game=createGame({id:makeId(),mode,botPolicy:mode==="local-bot"?botPolicy:null});recorded=false;enterSelection();break;

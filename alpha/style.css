@@ -107,3 +107,31 @@ body{background-color:#071120;background-image:url("data:image/svg+xml,%3Csvg xm
 .choice:disabled .lab-hand *{animation:none!important}.choice:disabled .lab-glow,.choice:disabled .lab-trace{opacity:0}
 @media(prefers-reduced-motion:reduce){.lab-hand *{animation:none!important}}
 @media(max-width:480px){header .deltrion-title{font-size:1rem}.selectable-offer{gap:2px}.selectable-offer .lab-frame{width:118%;height:118%;left:-9%;top:-9%}.selectable-offer .lab-art{width:77%;height:77%}}
+
+/* α 0.1.10: compact undo/OK and tap-to-toggle contextual information. */
+.register-actions{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;align-items:stretch}
+.register-actions button[data-action="undo"]{width:100%;align-self:stretch;margin:0;padding:0;min-height:48px}
+.register-actions .confirm-wide{width:100%;margin:0;min-width:0}
+.undo-arrow{font-size:1.65rem;line-height:1;display:block}
+.arena-info-wrap{position:relative}
+.pilot .mech-info-trigger{display:block;min-height:44px;width:min(100%,150px);margin:0 auto;padding:0;background:none;border:0;border-radius:6px;overflow:visible}
+.mech-info-trigger[aria-expanded="true"]{filter:drop-shadow(0 0 5px var(--chassis))}
+@media(hover:hover) and (pointer:fine){.mech-info-trigger:hover{filter:brightness(1.12) drop-shadow(0 0 4px var(--chassis))}}
+.mech-info-trigger:active{transform:scale(.97)}
+.deck-info-wrap{position:relative;display:flex;justify-content:flex-end;align-items:center}
+button.deck-count{display:flex;align-items:center;gap:6px;min-height:44px;min-width:44px;justify-content:center;margin:0 0 2px;padding:4px 8px;background:transparent;border:1px solid transparent;overflow:visible}
+button.deck-count[aria-expanded="true"]{border-color:#5aadc9;background:#132d40}
+button.info-window{--info-accent:#5bcbe9;position:absolute;z-index:15;display:grid;isolation:isolate;margin:0;padding:12px;border:1px solid var(--info-accent);border-radius:8px;background:#0b1d2df7;color:#eaf5ff;box-shadow:0 8px 25px #0009,0 0 12px color-mix(in srgb,var(--info-accent) 30%,transparent);text-align:left;overflow:visible}
+.skill-window{top:calc(100% - 22px);width:min(224px,78%);gap:6px}
+.skill-window.side-0{left:0}.skill-window.side-1{right:0}
+.skill-name{font-weight:800;font-size:1rem;color:var(--info-accent);letter-spacing:.03em}
+.skill-desc{font-size:.85rem;line-height:1.6;overflow-wrap:anywhere}
+.deck-window{right:0;bottom:calc(100% + 4px);width:min(240px,100%);grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.deck-item{display:grid;justify-items:center;gap:2px;min-width:0}
+.deck-window .lab-hand{width:100%;max-width:56px;aspect-ratio:1}
+.deck-window .lab-frame,.deck-window .lab-armor,.deck-window .lab-light{display:none}
+.deck-window .lab-art{top:50%;width:95%;height:95%}
+.deck-fraction{font-size:1rem;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(min-width:1200px){.skill-window{top:24px}.skill-window.side-0{left:-206px}.skill-window.side-1{right:-206px}}
+@media(max-width:480px){.register-actions{grid-template-columns:48px minmax(0,1fr);gap:6px}.skill-window{width:min(210px,82%)}.skill-desc{font-size:.8rem}.deck-window{width:min(216px,100%)}}
+@media(prefers-reduced-motion:reduce){.mech-info-trigger:active{transform:none}}
