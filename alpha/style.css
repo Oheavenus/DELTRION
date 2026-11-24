@@ -144,3 +144,27 @@ button.info-window{--info-accent:#5bcbe9;position:absolute;z-index:15;display:gr
 .choice:disabled .lab-art{filter:none}
 @media(hover:hover) and (pointer:fine){.choice:not(:disabled):hover .lab-art{filter:brightness(1.2) saturate(1.22) drop-shadow(0 0 1px #fff) drop-shadow(0 0 4px var(--hand-halo,#a9d8ff)) drop-shadow(0 0 6px #a9d8ff66)}}
 .deck-window .lab-art{filter:brightness(1.1) drop-shadow(0 0 1px #e8f8ff)}
+
+/* α 0.1.13 — approved cyber field and glass button direction. */
+#cyber-field,#cyber-lenses{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;display:block}
+#cyber-field{z-index:0}#cyber-lenses{z-index:1}
+#app{position:relative;z-index:2;background:transparent}
+.field-ready #app button[data-action]:not(.choice):not(.mech-info-trigger):not(.deck-count):not(.info-window){border:0;border-radius:0;background:transparent;box-shadow:none;color:#e4f8ff}
+.field-ready #app button[data-action]:disabled{color:#aebac4}
+.field-ready .lab-field{opacity:0;animation:none}
+.lab-glow{stroke-width:1.2px;opacity:.65;filter:none;animation:none!important}
+.lab-trace{stroke-width:1.2px;stroke-dasharray:1.189 98.811;opacity:var(--trace-opacity,.35);animation:lab-orbit var(--orbit,10s) linear infinite;animation-delay:var(--orbit-delay,0s)}
+@keyframes lab-orbit{to{stroke-dashoffset:-100}}
+.choice:disabled .lab-glow{opacity:.34}.choice:disabled .lab-trace{opacity:0}
+.mech-name{display:grid;justify-items:center;gap:1px;color:var(--name-color);min-width:0;line-height:1.12;margin:3px 0}
+.mech-name strong{font-size:clamp(1rem,3.7vw,1.45rem);letter-spacing:.06em;line-height:1.1}
+.mech-name small{font-size:.72rem;color:inherit;letter-spacing:.02em;overflow-wrap:anywhere}
+.name-red strong{font-family:Orbitron,system-ui,sans-serif;font-weight:900}.name-blue strong{font-family:"Chakra Petch",system-ui,sans-serif;font-style:italic;font-weight:700}.name-yellow strong{font-family:Rajdhani,system-ui,sans-serif;transform:skewX(-12deg);font-weight:700}.name-green strong{font-family:"Black Ops One",monospace;font-weight:700}.name-purple strong{font-family:"Cinzel Decorative",Georgia,serif;font-weight:700}
+.rosters{flex-wrap:wrap}.rosters>div{overflow-wrap:anywhere;min-width:0}
+@media(prefers-reduced-motion:reduce){.lab-trace{animation:none!important;opacity:0}}
+
+/* ECHO — approved LAB19.7 pixel renderer with legacy fallback. */
+.echo-model{display:block;width:100%}.echo-model.echo-ready>.mech:not(.echo-canvas){display:none!important}
+.echo-canvas[hidden]{display:none!important}.echo-model .echo-canvas{image-rendering:pixelated;aspect-ratio:1;object-fit:contain}
+.pilot .echo-model .echo-canvas{width:min(100%,148px);animation:none!important}.mech-select .echo-canvas{width:85px;max-width:100%;display:block;margin:auto}
+.echo-vfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8}
