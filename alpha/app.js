@@ -118,10 +118,10 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
   return ["normal","通常"];
  }
  const echoTimes={rock:1050,scissors:1450,paper:1700,rainbow:2200,hit:900,repair:1600,ko:1100,win:2450,lose:2200};
- function mechGraphic(color,hp,side=0,pose="idle",hyper=false,motion=pose,flash=false){
+ function mechGraphic(color,hp,side=0,pose="idle",hyper=false,motion=pose,flash=false,hand=""){
   const fallback=robotSVG(colors[color],hp,{side,pose});
-  if(color!=="purple")return fallback;
-  return `<span class="echo-model">${fallback}<canvas class="mech echo-canvas" width="48" height="48" data-motion="${motion}" data-side="${side}" data-gold="${hyper}" data-flash="${flash}" aria-label="ECHO" hidden></canvas></span>`;
+  if(color!=="purple")return globalThis.LAB14?.graphic?.({color,hp,side,pose,hand,fallback})||fallback;
+  return `<span class="echo-model">${fallback}<canvas class="mech mech-canvas echo-canvas" width="48" height="48" data-color="purple" data-motion="${motion}" data-side="${side}" data-gold="${hyper}" data-flash="${flash}" aria-label="ECHO" hidden></canvas></span>`;
  }
  function echoMotion(v,i,pose){
   if(v.colors[i]!=="purple")return pose;
@@ -137,10 +137,12 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
   for(let i=0;i<2;i++)if(v.colors[i]==="purple"){
    const m=stage==="blast"?(l.winner===i||l.winner===null?l.hands[i]:"hit"):v.hp[i]===0?"ko":l.actualHeal[i]>0?"repair":l.damage[1-i]>0?"hit":"idle";
    time=Math.max(time,echoTimes[m]||0,stage==="repair"&&!l.beforeHyper[i]&&v.hyper[i]?900:0);
-  }return time;
+  }
+  if(stage==="blast"&&l.triggers.some(t=>t.ability==="green_tie"))time=Math.max(time,1500);
+  return time;
  }
  function battleHeader(v){
-  return `<div class="arena-info-wrap"><div class="arena">${[0,1].map(i=>{const c=colors[v.colors[i]],l=playback?.after?.last,stage=playback?.stage,pose=stage==="charge"?"charge":stage==="blast"?(l?.winner===i||l?.winner===null?"attack":"hit"):stage==="repair"?(l?.actualHeal[i]>0?"heal":v.hp[i]===0?"lose":l?.damage[1-i]>0?"hit":"idle"):v.hp[i]===0?"lose":"idle";return `<section class="pilot ${v.hyper[i]?"hyper":""} pose-${pose}" style="--chassis:${c?.hex||"#78899b"}"><b>${playerLabel(i)}</b>${c?mechName(v.colors[i]):"<small>出撃待ち</small>"}<div class="score" aria-label="${v.wins[i]}勝">${[0,1].map(k=>`<i class="win-pip ${k<v.wins[i]?"won":""}" aria-hidden="true"></i>`).join("")}</div>${c?(playback?mechGraphic(v.colors[i],v.hp[i],i,pose,v.hyper[i],echoMotion(v,i,pose),stage==="repair"&&!!l&&!l.beforeHyper[i]&&v.hyper[i]):`<button type="button" class="mech-info-trigger" data-action="skill" data-value="${i}" aria-label="${playerLabel(i)} ${c.name}のスキル" aria-expanded="${info==="skill-"+i}">${mechGraphic(v.colors[i],v.hp[i],i,pose,v.hyper[i],echoMotion(v,i,pose),stage==="repair"&&!!l&&!l.beforeHyper[i]&&v.hyper[i])}</button>`):""}<div class="hp" aria-label="HP ${v.hp[i]}">${Array.from({length:5},(_,k)=>`<span class="${k<v.hp[i]?"on":""}"></span>`).join("")}</div><div class="rights">${v.rainbow[i]==="ready"?'<span class="rainbow-dot" role="img" aria-label="虹の使用権あり" title="虹の使用権あり"></span>':""}${v.hyper[i]?"<span class='gold-label' role='img' aria-label='ハイパー化' title='ハイパー化'>✦</span>":""}</div></section>`}).join('<span class="vs">VS</span>')}${combatFX()}</div>${[0,1].map(i=>!playback&&info==="skill-"+i&&v.colors[i]?skillWindow(v.colors[i],i):"").join("")}</div>`;
+  return `<div class="arena-info-wrap"><div class="arena">${[0,1].map(i=>{const c=colors[v.colors[i]],l=playback?.after?.last,stage=playback?.stage,pose=stage==="charge"?"charge":stage==="blast"?(l?.winner===i||l?.winner===null?"attack":"hit"):stage==="repair"?(l?.actualHeal[i]>0?"heal":v.hp[i]===0?"lose":l?.damage[1-i]>0?"hit":"idle"):v.hp[i]===0?"lose":"idle",hand=l?.hands[i]||"";return `<section class="pilot ${v.hyper[i]?"hyper":""} pose-${pose}" style="--chassis:${c?.hex||"#78899b"}"><b>${playerLabel(i)}</b>${c?mechName(v.colors[i]):"<small>出撃待ち</small>"}<div class="score" aria-label="${v.wins[i]}勝">${[0,1].map(k=>`<i class="win-pip ${k<v.wins[i]?"won":""}" aria-hidden="true"></i>`).join("")}</div>${c?(playback?mechGraphic(v.colors[i],v.hp[i],i,pose,v.hyper[i],echoMotion(v,i,pose),stage==="repair"&&!!l&&!l.beforeHyper[i]&&v.hyper[i],hand):`<button type="button" class="mech-info-trigger" data-action="skill" data-value="${i}" aria-label="${playerLabel(i)} ${c.name}のスキル" aria-expanded="${info==="skill-"+i}">${mechGraphic(v.colors[i],v.hp[i],i,pose,v.hyper[i],echoMotion(v,i,pose),stage==="repair"&&!!l&&!l.beforeHyper[i]&&v.hyper[i],hand)}</button>`):""}<div class="hp" aria-label="HP ${v.hp[i]}">${Array.from({length:5},(_,k)=>`<span class="${k<v.hp[i]?"on":""}"></span>`).join("")}</div><div class="rights">${v.rainbow[i]==="ready"?'<span class="rainbow-dot" role="img" aria-label="虹の使用権あり" title="虹の使用権あり"></span>':""}${v.hyper[i]?"<span class='gold-label' role='img' aria-label='ハイパー化' title='ハイパー化'>✦</span>":""}</div></section>`}).join('<span class="vs">VS</span>')}${combatFX()}</div>${[0,1].map(i=>!playback&&info==="skill-"+i&&v.colors[i]?skillWindow(v.colors[i],i):"").join("")}</div>`;
  }
  function skillWindow(color,i){
   const [name,desc]=skills[color],c=colors[color];
@@ -156,8 +158,11 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
   if(stage==="blast"){
    const tie=l.winner===null,side=l.winner??0,c=colors[playback.after.colors[side]],isRainbow=l.hands.includes("rainbow");
    const beam=isRainbow?"#e8b9ff":tie?"#fff":c.hex,back=side===1?" back":"",kind=({red:"slashfx",blue:"beam",green:"arcfx",yellow:"boltfx",purple:"orbfx"})[playback.after.colors[side]];
-   const fx=tie||isRainbow?`<div class="beam${tie?" tie":back} ${isRainbow?"rainbow-beam":""}" style="--beam:${beam}"></div>`:kind==="orbfx"?`<div class="orbfx ${side===0?"right":"left"}" style="--beam:${beam};--orb-move:${side===0?"52px":"-52px"};--orb-move-end:${side===0?"80px":"-80px"}"></div>`:`<div class="${kind}${back}" style="--beam:${beam}"></div>`;
-   return `<div class="fxfield" aria-hidden="true"><div class="flash" style="--beam:${beam}"></div>${fx}${[0,1].filter(i=>l.damage[1-i]>0).map(i=>`<span class="starburst ${i===0?"left":"right"}">✴</span><span class="blast ${i===0?"left":"right"}">💥</span>`).join("")}</div>`;
+   const adopted=!tie&&!isRainbow?globalThis.LAB14?.attackEffect?.({color:playback.after.colors[side],hand:l.hands[side],side}):"";
+   const fallback=kind==="orbfx"?`<div class="orbfx ${side===0?"right":"left"}" style="--beam:${beam};--orb-move:${side===0?"52px":"-52px"};--orb-move-end:${side===0?"80px":"-80px"}"></div>`:`<div class="${kind}${back}" style="--beam:${beam}"></div>`;
+   const fx=tie||isRainbow?`<div class="beam${tie?" tie":back} ${isRainbow?"rainbow-beam":""}" style="--beam:${beam}"></div>`:adopted||fallback;
+   const allies=l.triggers.filter(t=>t.ability==="green_tie").map(t=>globalThis.LAB14?.allyEffect?.(t.player)||"").join("");
+   return `<div class="fxfield" aria-hidden="true"><div class="flash" style="--beam:${beam}"></div>${fx}${allies}${[0,1].filter(i=>l.damage[1-i]>0).map(i=>`<span class="starburst ${i===0?"left":"right"}">✴</span><span class="blast ${i===0?"left":"right"}">💥</span>`).join("")}</div>`;
   }
   if(stage==="repair")return `<div class="fxfield" aria-hidden="true">${[0,1].map(i=>`${l.damage[1-i]?`<span class="damagefx ${i===0?"left":"right"}">−${l.damage[1-i]}</span>`:""}${l.actualHeal[i]?`<span class="repairfx ${i===0?"left":"right"}">✚ +${l.actualHeal[i]}</span>`:""}`).join("")}</div>`;
   return "";
@@ -219,28 +224,47 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
  }
  function resultLabel(w){return w===null?"DRAW":`${playerLabel(w)} WIN`}
  function persist(){if(recorded||!game)return;recorded=true;if(!consent)return;const l=game.exportLog();saved.push(l);try{storage.setItem(key,JSON.stringify(saved))}catch{storageWarning="保存容量・設定の制約があります。JSONを今すぐ保存してください。"}}
- // Preserve unchanged screen regions and existing ECHO canvas bitmaps on draft/skill taps.
+ // Preserve unchanged screen regions and every production canvas bitmap on draft/skill taps.
  let previousMarkup=[];
  function renderStable(html){
   if(!root.ownerDocument?.createElement||typeof root.insertBefore!=="function"){root.innerHTML=html;return}
   const template=root.ownerDocument.createElement("template");template.innerHTML=html;
   const fresh=[...template.content.children],old=[...root.children],markup=fresh.map(n=>n.outerHTML);
-  const key=cv=>cv.closest(".mech-select")?"selection":"battle-"+cv.dataset.side;
-  const canvases=new Map([...root.querySelectorAll(".echo-canvas")].map(cv=>[key(cv),cv]));
+  const key=cv=>cv.closest(".mech-select")?"selection-"+cv.dataset.color:"battle-"+cv.dataset.side+"-"+cv.dataset.color;
+  const canvases=new Map([...root.querySelectorAll(".mech-canvas")].map(cv=>[key(cv),cv]));
   // Keys on detached template nodes still have their local ancestor groups.
   const nodes=fresh.map((n,i)=>{
    if(old[i]&&previousMarkup[i]===markup[i])return old[i];
-   for(const cv of n.querySelectorAll(".echo-canvas")){
+   for(const cv of n.querySelectorAll(".mech-canvas")){
     const prior=canvases.get(key(cv));if(!prior)continue;
-    for(const name of ["motion","side","gold","flash"])prior.dataset[name]=cv.dataset[name];
-    const parent=cv.parentElement;cv.replaceWith(prior);if(!prior.hidden)parent.classList.add("echo-ready");
+    for(const name of ["color","motion","pose","hand","hp","side","gold","flash"])if(name in cv.dataset)prior.dataset[name]=cv.dataset[name];
+    const parent=cv.parentElement;cv.replaceWith(prior);if(!prior.hidden)parent.classList.add(prior.classList.contains("echo-canvas")?"echo-ready":"lab14-ready");
    }
    return n;
   });
   for(let i=0;i<nodes.length;i++)if(root.children[i]!==nodes[i])root.insertBefore(nodes[i],root.children[i]||null);
   const keep=new Set(nodes);for(const child of [...root.children])if(!keep.has(child))child.remove();
   previousMarkup=markup;
+  positionGreenShots();
  }
+ // Measure stable model containers, not animated canvas transforms, in arena coordinates.
+ function positionGreenShots(){
+  const fx=root.querySelector?.(".fxfield");if(!fx)return;
+  const arena=fx.closest(".arena"),pilots=[...arena.querySelectorAll(".pilot")];
+  if(pilots.length!==2)return;
+  const shots=[...fx.querySelectorAll(".lab14-green-shot")];if(!shots.length)return;
+  const bounds=fx.getBoundingClientRect(),centers=pilots.map(p=>{
+   const box=(p.querySelector(".lab14-model,.echo-model,.mech")||p).getBoundingClientRect();
+   return [box.left-bounds.left+box.width/2,box.top-bounds.top+box.height/2];
+  });
+  for(const shot of shots){
+   const side=shot.classList.contains("side-1")?1:0,a=centers[side],b=centers[1-side];
+   shot.style.setProperty("--shot-x",a[0]+"px");shot.style.setProperty("--shot-y",a[1]+"px");
+   shot.style.setProperty("--shot-span",Math.abs(b[0]-a[0])+"px");
+   shot.style.setProperty("--shot-dy",(b[1]-a[1])+"px");
+  }
+ }
+ root.ownerDocument?.defaultView?.addEventListener("resize",positionGreenShots);
  function render(){
   handId=0;
   let body="";
@@ -261,7 +285,7 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
     body=`${battleHeader(v)}${roster(v)}<h2>${v.phase==="battle_result"?"機体戦 "+resultLabel(v.battleResult.winner):v.phase==="round_result"?"ROUND "+v.round+" 完了":"両者の登録完了"}</h2>${roundBoard(v)}${readout(revealed.at(-1))}${v.phase==="resolve"?button("fight","戦闘開始","","","primary"):button("advance",v.phase==="battle_result"?"次の機体戦":"次のラウンド","","","primary")}`;
    }
   }
-  const v=game?.view();renderStable(`<header><strong class="deltrion-title"><span>電脳拳士</span> DELTRION</strong><small>LOCAL α 0.1.15</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`);
+  const v=game?.view();renderStable(`<header><strong class="deltrion-title"><span>電脳拳士</span> DELTRION</strong><small>LOCAL α 0.1.17</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`);
  }
  root.addEventListener("click",e=>{
   const b=e.target.closest("button[data-action]");if(!b||b.disabled)return;const {action,value}=b.dataset;

@@ -1,10 +1,10 @@
-/* Adapted from approved CYBER FIELD 05 and BUTTON LAB 01; source main 2e320a4. */
+/* CYBER FIELD 06 speed 6.0; BUTTON LAB 01.1; main 4821ad8. */
 
 (() => {
   const cv = document.getElementById('cyber-field');
   if(!cv)return;
   const ctx = cv.getContext('2d');
-  const speedEl={value:3},densityEl={value:1},mistEl={value:1.5};
+  const speedEl={value:6},densityEl={value:1},mistEl={value:1.5};
   const lens=document.getElementById('cyber-lenses'),lg=lens?.getContext('2d');
   if(!ctx||!lg)return;
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
@@ -238,19 +238,26 @@
   }
   // All sloping sides use the same equilateral-triangle angle. Rectangular
   // selection panels and impossibly narrow controls are not skewed.
-  function glassPoints(x,y,w,h,inverse,rectangular=false){
+  function glassPoints(x,y,w,h,inverse,rectangular=false,edge="none"){
     const cut=rectangular||w<=2*h/Math.sqrt(3)+4?0:h/Math.sqrt(3);
-    return inverse?[[x,y],[x+w,y],[x+w-cut,y+h],[x+cut,y+h]]:[[x+cut,y],[x+w-cut,y],[x+w,y+h],[x,y+h]];
+    const left=edge==="first"?0:cut,right=edge==="last"?0:cut;
+    return inverse?[[x,y],[x+w,y],[x+w-right,y+h],[x+left,y+h]]:[[x+left,y],[x+w-right,y],[x+w,y+h],[x,y+h]];
+  }
+  function glassRule(action,wide,rowIndex,rowCount){
+    if(action==="select"||(wide&&rowCount<=1))return {rectangular:true,edge:"none"};
+    return {rectangular:false,edge:rowCount>1?(rowIndex===0?"first":rowIndex===rowCount-1?"last":"none"):"none"};
   }
   function drawLenses(now){
     lg.setTransform(dpr,0,0,dpr,0,0);lg.clearRect(0,0,W,H);
-    let idx=0;const rows=new Map();
-    for(const b of document.querySelectorAll('#app button[data-action]')){
+    let idx=0;const buttons=[...document.querySelectorAll('#app button[data-action]')];
+    for(const b of buttons){
       const action=b.dataset.action;if(['skill','deck-info','close-info'].includes(action))continue;
       const r=b.getBoundingClientRect();if(r.width<=0||r.height<=0)continue;
       const group=b.closest?.('.start-actions,.mech-select,.register-actions,footer');
-      let inverse=action==='submit';
-      if(group){let row=rows.get(group);if(!row||Math.abs(row.top-r.top)>2)row={top:r.top,count:0};inverse=row.count++%2===1;rows.set(group,row)}
+      const row=group?buttons.filter(other=>other.closest?.('.start-actions,.mech-select,.register-actions,footer')===group&&Math.abs(other.getBoundingClientRect().top-r.top)<=2):[b];
+      const rowIndex=row.indexOf(b),inverse=row.length>1?rowIndex%2===1:action==='submit';
+      const wide=b.classList.contains('confirm-wide')||!!group?.classList?.contains('start-actions');
+      const rule=glassRule(action,wide,rowIndex,row.length);
       if(r.bottom<0||r.top>H)continue;
       const svg=b.querySelector('.lab-frame');
       if(svg){const rect=svg.getBoundingClientRect(),p=svg.querySelector('.lab-field');if(!p)continue;
@@ -262,7 +269,7 @@
         const x=r.x+1,y=r.y+1,w=r.width-2,h=r.height-2;
         // A trapezoid always has 60-degree sides. Tall mech panels remain rectangular;
         // if a control is exceptionally narrow, use a rectangle rather than a distorted slope.
-        const pts=glassPoints(x,y,w,h,inverse,action==='select');
+        const pts=glassPoints(x,y,w,h,inverse,rule.rectangular,rule.edge);
         const selected=b.classList.contains('selected'),color=b.disabled?'#89939d':selected?'#d3f4ff':'#78bfd5';
         lensPolygon(pts,color,b.disabled,selected,now,idx++,true);
       }

@@ -213,3 +213,58 @@ html{scrollbar-gutter:stable}
 #app .mech-select button[data-action].selected{border:1px solid transparent}
 #app .register-actions button[data-action="undo"]{min-width:82px}
 @media(max-width:480px){#app .pilot .mech-info-trigger{width:min(100%,100px)}}
+
+/* α 0.1.16: SHA-256 verified LAB14.1 production rigs (ACE/BRAZE/CHASE/DEL-17). */
+.lab14-model{position:relative;aspect-ratio:1;display:block;margin:auto}
+.pilot .lab14-model{width:min(100%,124px)}
+.mech-select .lab14-model{width:min(100%,85px)}
+#app .lab14-model>.mech{position:absolute;inset:0;width:100%;height:100%;margin:0;max-width:none}
+#app .lab14-model>.mech:not(.lab14-canvas){visibility:hidden}
+.lab14-load-failed #app .lab14-model:not(.lab14-ready)>.mech:not(.lab14-canvas){visibility:visible}
+#app .lab14-model>.lab14-canvas:not([hidden]){visibility:visible}
+.lab14-canvas{image-rendering:pixelated;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 3px 1px #02070bcc)}
+.lab14-canvas[data-hp="0"]{filter:grayscale(1) brightness(.48) drop-shadow(0 3px 1px #02070bcc)}
+.pilot.hyper .lab14-canvas{filter:drop-shadow(0 0 7px #ffd16e) drop-shadow(0 3px 1px #02070bcc)}
+#app .pilot .mech-info-trigger .lab14-model{width:100%}
+@media(max-width:480px){.pilot .lab14-model{width:min(100%,100px)}}
+
+/* LAB14.1 hand-specific motion and VFX, adapted to the alpha arena coordinates. */
+.lab14-canvas[data-side="0"]{--lab14-dir:1}.lab14-canvas[data-side="1"]{--lab14-dir:-1}
+.pilot.pose-charge .lab14-canvas{animation:lab14-prep .22s ease-out both!important}
+.pilot.pose-attack .lab14-canvas[data-hand="rock"]{animation:lab14-punch-motion .5s linear both!important}
+.pilot.pose-attack .lab14-canvas[data-hand="scissors"]{animation:lab14-slash-step .5s ease-out both!important}
+.pilot.pose-attack .lab14-canvas[data-hand="paper"]{animation:lab14-beam-recoil .5s linear both!important}
+@keyframes lab14-prep{from{transform:translateX(0)}to{transform:translateX(calc(var(--lab14-dir)*-7px)) scaleY(.97)}}
+@keyframes lab14-punch-motion{0%{transform:translateX(calc(var(--lab14-dir)*-8px))}19%,40%{transform:translateX(calc(var(--lab14-dir)*18px)) scale(1.04)}100%{transform:translateX(0)}}
+@keyframes lab14-slash-step{0%{transform:translateX(calc(var(--lab14-dir)*-5px))}20%,42%{transform:translateX(calc(var(--lab14-dir)*8px))}100%{transform:none}}
+@keyframes lab14-beam-recoil{0%{transform:scale(1)}19%,43%{transform:translateX(calc(var(--lab14-dir)*-4px));filter:drop-shadow(0 0 6px #ffcf6e)}100%{transform:none}}
+.lab14-attack{position:absolute;pointer-events:none;z-index:6;--lab14-sign:1;--lab14-shift:min(48vw,324px);--lab14-a:#ff8542;--lab14-b:#fff1a3}.lab14-attack.side-1{--lab14-sign:-1;--lab14-shift:calc(-1 * min(48vw,324px))}.lab14-attack.tone-blue{--lab14-a:#399aff;--lab14-b:#e3ffff}.lab14-attack.tone-yellow{--lab14-a:#e2a600;--lab14-b:#fffde2}
+.lab14-punch{top:47%;left:26%;width:0;height:0;animation:lab14-punch-trail .5s linear both}.lab14-punch.side-1{left:74%}.lab14-punch i,.lab14-punch b,.lab14-punch em,.lab14-dash i,.lab14-dash b,.lab14-dash em{position:absolute;left:-28px;top:-10px;width:56px;height:20px;transform:scaleX(var(--lab14-sign));clip-path:polygon(0 44%,80% 0,100% 50%,80% 100%,0 56%);background:linear-gradient(90deg,transparent,var(--lab14-a),var(--lab14-b))}.lab14-punch b,.lab14-dash b{top:-21px;height:7px;width:44px;opacity:.65}.lab14-punch em,.lab14-dash em{top:15px;height:6px;width:40px;opacity:.5}
+.lab14-dash{top:47%;left:26%;width:0;height:0;animation:lab14-dash-trail .5s linear both}.lab14-dash.side-1{left:74%}.lab14-dash i{width:92px;height:5px;box-shadow:0 -12px 1px #ffe39b99,0 13px 1px #ffd65999,0 0 17px #ffc649}
+.lab14-slash{top:23%;left:22%;width:25%;height:50%;filter:drop-shadow(0 0 8px var(--lab14-a));animation:lab14-slash-travel .5s linear both}.lab14-slash.side-1{left:53%}.lab14-slash svg{width:100%;height:100%;transform:scaleX(var(--lab14-sign))}.lab14-slash path:first-child{fill:var(--lab14-a)}.lab14-slash path:last-child{fill:var(--lab14-b)}
+.lab14-beam{left:26%;width:48%;top:48%;height:12px;transform-origin:left center;animation:lab14-travel .5s linear both}.lab14-beam.side-1{transform-origin:right center}.lab14-beam i{position:absolute;inset:-6px 0;background:var(--lab14-a);border-radius:100%;filter:blur(5px)}.lab14-beam b{position:absolute;inset:0;background:color-mix(in srgb,var(--lab14-a) 70%,white);box-shadow:0 0 12px var(--lab14-a);border-radius:15px}.lab14-beam em{position:absolute;inset:3px 0;background:var(--lab14-b);border-radius:15px}
+.lab14-green-shot{left:var(--shot-x,calc(25% - 10.5px));top:var(--shot-y,48%);width:var(--shot-span,calc(50% + 21px));height:0;transform-origin:0 0}.lab14-green-shot.side-1{left:var(--shot-x,calc(75% + 10.5px));transform:scaleX(-1)}.lab14-green-shot i{position:absolute;left:-8px;top:-9px;width:18px;height:18px;background:#fff9be;clip-path:polygon(50% 0,65% 33%,100% 30%,77% 56%,100% 90%,56% 73%,30% 100%,34% 66%,0 50%,33% 38%);filter:drop-shadow(0 0 5px #ffa13b);animation:lab14-green-flash .19s both}.lab14-green-shot b{position:absolute;left:0;top:-2px;width:23px;height:4px;background:linear-gradient(90deg,transparent,#ffaf48,#ffffe1);animation:lab14-green-travel .24s var(--shot-delay) both}.lab14-green-shot.missile b{width:30px;height:6px;top:-3px;border-radius:4px;background:linear-gradient(90deg,transparent,#bbc3c9,#f8f0c2,#fa7a2f);box-shadow:-12px 0 7px #9ba3a9;animation:lab14-green-arc .32s var(--shot-delay) both}.lab14-green-shot.sniper b{width:60px;height:2px;top:-1px;background:linear-gradient(90deg,transparent,#9af1a7,#fff);animation-duration:.14s}.lab14-green-shot em{position:absolute;width:100%;height:1px;background:#a3fc80;opacity:.6;animation:lab14-green-flash .3s both}
+@keyframes lab14-punch-trail{0%{translate:0;opacity:0}12%{opacity:1}23%,40%{translate:var(--lab14-shift);opacity:1}100%{translate:var(--lab14-shift);opacity:0}}
+@keyframes lab14-dash-trail{0%{translate:0;opacity:0;scale:.1 1}18%{opacity:1;scale:1}55%,100%{translate:var(--lab14-shift);opacity:0;scale:1}}
+@keyframes lab14-slash-travel{0%{translate:0;scale:.4;opacity:0}12%{opacity:1}23%,40%{translate:var(--lab14-shift);scale:1;opacity:1}100%{translate:var(--lab14-shift);scale:1.15;opacity:0}}
+@keyframes lab14-travel{0%{scale:.08 1;opacity:0}15%{opacity:1}22%,43%{scale:1;opacity:1}100%{scale:1;opacity:0}}
+@keyframes lab14-green-flash{0%,100%{opacity:0}15%,60%{opacity:1}}@keyframes lab14-green-travel{0%{opacity:0;left:0;top:-2px;transform:translateX(-50%)}15%,85%{opacity:1}100%{opacity:0;left:100%;top:calc(var(--shot-dy,0px) - 2px);transform:translateX(-50%)}}@keyframes lab14-green-arc{0%{opacity:0;left:0;top:-3px;transform:translateX(-50%)}18%{opacity:1}50%{left:50%;top:calc(var(--shot-arc) + var(--shot-dy,0px) / 2);opacity:1}100%{opacity:0;left:100%;top:calc(var(--shot-dy,0px) - 3px);transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.lab14-attack,.lab14-canvas{animation-duration:.01ms!important}.lab14-green-shot b{display:none}}
+
+/* LAB14.1 green first-tie presentation. Timing and approved ally sprite are unchanged. */
+.lab14-ally{position:absolute;top:48%;width:0;height:0;z-index:9;pointer-events:none}
+.lab14-ally.side-0{left:76%;--ally-start:-440px}
+.lab14-ally.side-1{left:24%;--ally-start:440px}
+.lab14-ally .ally-caption{position:absolute;left:50%;top:-95px;translate:-50% 0;white-space:nowrap;background:#152b22;color:#cdffac;padding:5px 10px;border:1px solid #91d969;border-radius:5px;font-size:clamp(9px,2vw,12px);font-weight:800;animation:lab14-caption 1.5s .2s both}
+.lab14-ally .ally-flight{position:absolute;width:clamp(72px,20vw,116px);height:clamp(72px,20vw,116px);left:calc(clamp(72px,20vw,116px)/-2);top:calc(clamp(72px,20vw,116px)/-2);animation:lab14-ram 610ms 390ms cubic-bezier(.42,.03,.75,.55) both}
+.lab14-ally .ally-flight img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;transform:scaleX(var(--ally-dir));filter:drop-shadow(0 0 3px #c3e99c)}
+.lab14-ally .ally-flight i{position:absolute;top:62%;left:calc(50% - var(--ally-dir)*42%);width:55%;height:8%;background:linear-gradient(90deg,transparent,#ffca68,#fff);transform:translateX(-50%) scaleX(var(--ally-dir));filter:blur(2px);z-index:-1}
+.lab14-ally .ally-explosion{position:absolute;left:0;top:0;animation:lab14-burst 500ms 1000ms ease-out both}
+.lab14-ally .ally-explosion i,.lab14-ally .ally-explosion em{position:absolute;border-radius:50%;width:112px;height:112px;left:-56px;top:-56px;background:radial-gradient(circle,#fff 0 13%,#fff2a4 23%,#ff9c27 42%,#e44518b0 58%,#572e1f55 69%,transparent 72%);box-shadow:0 0 22px #ff923799}
+.lab14-ally .ally-explosion em{width:144px;height:144px;left:-72px;top:-72px;background:none;border:3px solid #ffe5a9;box-shadow:0 0 10px #ff9237;animation:lab14-ring 500ms 1000ms ease-out both}
+.lab14-ally .ally-explosion b{position:absolute;width:var(--r);height:3px;background:linear-gradient(90deg,#fff6ca,#ff9a32,transparent);transform-origin:0 50%;transform:rotate(var(--a)) translateX(22px)}
+@keyframes lab14-ram{0%{opacity:0;transform:translateX(var(--ally-start))}1%{opacity:1}91%,99%{opacity:1;transform:translateX(0)}100%{opacity:0;transform:translateX(0)}}
+@keyframes lab14-burst{0%{opacity:0;transform:scale(.28)}10%{opacity:1;transform:scale(.8)}35%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.3)}}
+@keyframes lab14-ring{0%{transform:scale(.3)}100%{transform:scale(1.25)}}
+@keyframes lab14-caption{0%,100%{opacity:0}12%,85%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.lab14-ally .ally-flight{display:none}.lab14-ally .ally-explosion{animation:none;opacity:1;transform:scale(.65)}.lab14-ally .ally-explosion em{animation:none}.lab14-ally .ally-caption{animation:none;opacity:1}}
