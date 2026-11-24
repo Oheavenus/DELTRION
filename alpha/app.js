@@ -226,14 +226,14 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
   const template=root.ownerDocument.createElement("template");template.innerHTML=html;
   const fresh=[...template.content.children],old=[...root.children],markup=fresh.map(n=>n.outerHTML);
   const key=cv=>cv.closest(".mech-select")?"selection":"battle-"+cv.dataset.side;
-  const canvases=new Map([...root.querySelectorAll(".echo-canvas:not([hidden])")].map(cv=>[key(cv),cv]));
+  const canvases=new Map([...root.querySelectorAll(".echo-canvas")].map(cv=>[key(cv),cv]));
   // Keys on detached template nodes still have their local ancestor groups.
   const nodes=fresh.map((n,i)=>{
    if(old[i]&&previousMarkup[i]===markup[i])return old[i];
    for(const cv of n.querySelectorAll(".echo-canvas")){
     const prior=canvases.get(key(cv));if(!prior)continue;
     for(const name of ["motion","side","gold","flash"])prior.dataset[name]=cv.dataset[name];
-    const parent=cv.parentElement;cv.replaceWith(prior);parent.classList.add("echo-ready");
+    const parent=cv.parentElement;cv.replaceWith(prior);if(!prior.hidden)parent.classList.add("echo-ready");
    }
    return n;
   });
@@ -261,7 +261,7 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
     body=`${battleHeader(v)}${roster(v)}<h2>${v.phase==="battle_result"?"機体戦 "+resultLabel(v.battleResult.winner):v.phase==="round_result"?"ROUND "+v.round+" 完了":"両者の登録完了"}</h2>${roundBoard(v)}${readout(revealed.at(-1))}${v.phase==="resolve"?button("fight","戦闘開始","","","primary"):button("advance",v.phase==="battle_result"?"次の機体戦":"次のラウンド","","","primary")}`;
    }
   }
-  const v=game?.view();renderStable(`<header><strong class="deltrion-title"><span>電脳拳士</span> DELTRION</strong><small>LOCAL α 0.1.14</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`);
+  const v=game?.view();renderStable(`<header><strong class="deltrion-title"><span>電脳拳士</span> DELTRION</strong><small>LOCAL α 0.1.15</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`);
  }
  root.addEventListener("click",e=>{
   const b=e.target.closest("button[data-action]");if(!b||b.disabled)return;const {action,value}=b.dataset;

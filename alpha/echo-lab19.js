@@ -120,5 +120,5 @@ function tick(now){
  }
  if(!reduced)renderEffects(now);else document.querySelector('#app .echo-vfx')?.remove();
 }
-start().then(()=>requestAnimationFrame(tick)).catch(e=>console.warn('ECHO rendering fallback',e));
+start().then(()=>requestAnimationFrame(tick)).catch(e=>{document.documentElement?.classList.add('echo-load-failed');console.warn('ECHO rendering fallback',e)});
 })();

@@ -186,7 +186,7 @@ html{scrollbar-gutter:stable}
 #app .register-actions button[data-action="undo"]{padding:4px 27px;margin:0}
 #app .register-actions .confirm-wide{margin:0}
 #app button.confirm-wide{margin-inline:0}
-@media(max-width:319px){.start-actions{grid-template-columns:1fr}}
+@media(max-width:360px){.start-actions{grid-template-columns:1fr}}
 /* Reserve the same square before and after pixel renderer initialization. */
 .echo-model{position:relative;aspect-ratio:1;display:block;margin:auto}
 .pilot .echo-model{width:min(100%,124px)}
@@ -195,3 +195,21 @@ html{scrollbar-gutter:stable}
 @media(max-width:480px){.pilot .echo-model{width:min(100%,100px)}}
 #app .choice:not(:disabled):hover,#app .choice:not(:disabled):active,#app .mech-info-trigger:active{transform:none}
 #app .choice:not(:disabled):active{filter:brightness(1.17)}
+
+/* α 0.1.15: a loading ECHO must never flash its legacy sprite on input.
+   Only an actual asset initialization failure enables the legacy fallback. */
+#app .echo-model>.mech:not(.echo-canvas){visibility:hidden}
+.echo-load-failed #app .echo-model:not(.echo-ready)>.mech:not(.echo-canvas){visibility:visible}
+#app .echo-model>.echo-canvas:not([hidden]){visibility:visible}
+#app .arena{align-items:stretch}
+#app .arena>.vs{align-self:center}
+#app .pilot{display:flex;flex-direction:column;min-width:0}
+#app .pilot .hp{margin-top:auto;padding-top:8px}
+#app .pilot .mech-info-trigger{width:min(100%,124px);flex:none}
+#app .pilot .mech-info-trigger .echo-model{width:100%}
+#app .pilot .mech-info-trigger .mech{max-width:100%}
+#app .mech-select button[data-action]{border:1px solid transparent}
+.field-ready #app .mech-select button[data-action="select"]:not(.choice):not(.mech-info-trigger):not(.deck-count):not(.info-window){border:1px solid transparent}
+#app .mech-select button[data-action].selected{border:1px solid transparent}
+#app .register-actions button[data-action="undo"]{min-width:82px}
+@media(max-width:480px){#app .pilot .mech-info-trigger{width:min(100%,100px)}}

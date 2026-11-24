@@ -236,6 +236,12 @@
       for(let j=0;j<18;j++){const part=cfg.trail/18;lg.setLineDash([len*part*1.07,len-len*part*1.07]);lg.lineDashOffset=-len*((phase-j*part+1)%1);lg.globalAlpha=cfg.brightness*Math.pow(1-j/18,1.7);lg.strokeStyle='#d6f7ff';lg.stroke()}
     }lg.restore();
   }
+  // All sloping sides use the same equilateral-triangle angle. Rectangular
+  // selection panels and impossibly narrow controls are not skewed.
+  function glassPoints(x,y,w,h,inverse,rectangular=false){
+    const cut=rectangular||w<=2*h/Math.sqrt(3)+4?0:h/Math.sqrt(3);
+    return inverse?[[x,y],[x+w,y],[x+w-cut,y+h],[x+cut,y+h]]:[[x+cut,y],[x+w-cut,y],[x+w,y+h],[x,y+h]];
+  }
   function drawLenses(now){
     lg.setTransform(dpr,0,0,dpr,0,0);lg.clearRect(0,0,W,H);
     let idx=0;const rows=new Map();
@@ -256,8 +262,7 @@
         const x=r.x+1,y=r.y+1,w=r.width-2,h=r.height-2;
         // A trapezoid always has 60-degree sides. Tall mech panels remain rectangular;
         // if a control is exceptionally narrow, use a rectangle rather than a distorted slope.
-        const cut=action==='select'||w<=2*h/Math.sqrt(3)+4?0:h/Math.sqrt(3);
-        const pts=inverse?[[x,y],[x+w,y],[x+w-cut,y+h],[x+cut,y+h]]:[[x+cut,y],[x+w-cut,y],[x+w,y+h],[x,y+h]];
+        const pts=glassPoints(x,y,w,h,inverse,action==='select');
         const selected=b.classList.contains('selected'),color=b.disabled?'#89939d':selected?'#d3f4ff':'#78bfd5';
         lensPolygon(pts,color,b.disabled,selected,now,idx++,true);
       }
