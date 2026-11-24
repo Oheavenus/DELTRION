@@ -1,0 +1,10 @@
+{
+  "name": "DELTRION PIXEL LAB 17.1",
+  "classification": "independent visual validation build",
+  "htmlSha256": "5ecdf7d81f009718b5a41e0c3464b3767abb211e7136ba0d4e8485f8f2f2e762",
+  "htmlBytes": 12932078,
+  "baselineSha256": "278a2f58696d98d7e06633f0c85579358af75076430793ae2fc7f131435baccc",
+  "sourceInputApproval": "approved-sha256-verified",
+  "conceptSha256": "5359670e7adcbc57eb29f4d58391755b735d7fb2a2c1e053c58c71e87bbc514a",
+  "motionReferenceSha256": "2ce5b950b6b8010b7fe99973a5c92f829c837da2f5937c0fa749ee65e718b939"
+}
