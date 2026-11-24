@@ -89,7 +89,7 @@ body{background-color:#071120;background-image:url("data:image/svg+xml,%3Csvg xm
 .lab-art{position:absolute;left:50%;top:37%;width:70%;height:70%;transform:translate(-50%,-50%);background:var(--art) center/contain no-repeat;isolation:isolate;pointer-events:none}
 .lab-hand.up .lab-art{top:63%}.lab-hand.hex .lab-art{top:50%;width:76%;height:76%}
 .lab-armor,.lab-light{position:absolute;inset:0;pointer-events:none;mask-repeat:no-repeat;mask-position:center;mask-size:contain;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;-webkit-mask-size:contain}
-.lab-armor{background:var(--armor);mask-image:var(--armor-mask-url);-webkit-mask-image:var(--armor-mask-url);mix-blend-mode:multiply;opacity:.56}
+.lab-armor{background:var(--armor);mask-image:var(--armor-mask-url);-webkit-mask-image:var(--armor-mask-url);mix-blend-mode:multiply;opacity:.27}
 .lab-light{background:var(--light);mask-image:var(--light-mask-url);-webkit-mask-image:var(--light-mask-url);mix-blend-mode:screen;opacity:.85}
 .lab-hand.hand-rock{--art:url("../assets/ui/hand_icon_drafts/v1/hands/rock.png");--armor-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/rock_armor_mask.png");--light-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/rock_light_mask.png")}
 .lab-hand.hand-scissors{--art:url("../assets/ui/hand_icon_drafts/v1/hands/scissors.png");--armor-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/scissors_armor_mask.png");--light-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/scissors_light_mask.png")}
@@ -135,3 +135,12 @@ button.info-window{--info-accent:#5bcbe9;position:absolute;z-index:15;display:gr
 @media(min-width:1200px){.skill-window{top:24px}.skill-window.side-0{left:-206px}.skill-window.side-1{right:-206px}}
 @media(max-width:480px){.register-actions{grid-template-columns:48px minmax(0,1fr);gap:6px}.skill-window{width:min(210px,82%)}.skill-desc{font-size:.8rem}.deck-window{width:min(216px,100%)}}
 @media(prefers-reduced-motion:reduce){.mech-info-trigger:active{transform:none}}
+
+/* α 0.1.11: keep the hand above the illuminated field, preserve silver highlights. */
+.lab-frame{z-index:0}
+.lab-art{z-index:1;filter:brightness(1.16) contrast(1.04) drop-shadow(0 0 1px #e8f8ff) drop-shadow(0 0 3px #c0e8ffb3) drop-shadow(0 0 6px #85ccff66)}
+.lab-field{opacity:.045}
+@keyframes lab-field{50%{opacity:.17}}
+.choice:disabled .lab-art{filter:none}
+@media(hover:hover) and (pointer:fine){.choice:not(:disabled):hover .lab-art{filter:brightness(1.2) contrast(1.04) drop-shadow(0 0 1px #fff) drop-shadow(0 0 4px #d5f4ffcc) drop-shadow(0 0 7px #85ccff88)}}
+.deck-window .lab-art{filter:brightness(1.1) drop-shadow(0 0 1px #e8f8ff)}
