@@ -78,3 +78,32 @@ header{gap:10px;min-height:62px}header small{margin-left:auto}
 
 /* α 0.1.8: full-width confirmation, separate undo action. */
 button.confirm-wide{display:block;width:100%;min-height:48px;margin:8px 0 0;font-size:1rem;font-weight:800;letter-spacing:.08em;touch-action:manipulation}.register-actions{display:flex;flex-direction:column;gap:6px}.register-actions button[data-action="undo"]{flex:none;align-self:flex-end;margin:0;min-height:44px}.register-actions .confirm-wide{flex:none;margin:0}
+
+/* α 0.1.9: HAND UI LAB 01 trial integration. Canonical art and original sprites are preserved. */
+.deltrion-title{display:flex;flex-direction:column;font-size:1.2rem;line-height:1.05;font-style:italic;letter-spacing:.12em}.deltrion-title span{font-size:.63rem;font-style:normal;letter-spacing:.18em;color:#b5d3e4;margin-bottom:3px}
+body{background-color:#071120;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='69.282032' viewBox='0 0 40 69.282032'%3E%3Cpath d='M0 0H40M0 34.641016H40M0 69.282032H40M0 0L40 69.282032M40 0L0 69.282032M0 0L-40 69.282032M40 0L80 69.282032' stroke='%23132131' stroke-width='.55' fill='none'/%3E%3C/svg%3E")}
+#app{background:#0a1524ed;min-height:100vh}
+.lab-hand.hand-sprite{aspect-ratio:1/1.05;overflow:visible;filter:none!important;animation:none!important}
+.lab-hand.hand-sprite::before,.lab-hand.hand-sprite::after{content:none}
+.lab-frame{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.lab-art{position:absolute;left:50%;top:37%;width:70%;height:70%;transform:translate(-50%,-50%);background:var(--art) center/contain no-repeat;isolation:isolate;pointer-events:none}
+.lab-hand.up .lab-art{top:63%}.lab-hand.hex .lab-art{top:50%;width:76%;height:76%}
+.lab-armor,.lab-light{position:absolute;inset:0;pointer-events:none;mask-repeat:no-repeat;mask-position:center;mask-size:contain;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;-webkit-mask-size:contain}
+.lab-armor{background:var(--armor);mask-image:var(--armor-mask-url);-webkit-mask-image:var(--armor-mask-url);mix-blend-mode:multiply;opacity:.56}
+.lab-light{background:var(--light);mask-image:var(--light-mask-url);-webkit-mask-image:var(--light-mask-url);mix-blend-mode:screen;opacity:.85}
+.lab-hand.hand-rock{--art:url("../assets/ui/hand_icon_drafts/v1/hands/rock.png");--armor-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/rock_armor_mask.png");--light-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/rock_light_mask.png")}
+.lab-hand.hand-scissors{--art:url("../assets/ui/hand_icon_drafts/v1/hands/scissors.png");--armor-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/scissors_armor_mask.png");--light-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/scissors_light_mask.png")}
+.lab-hand.hand-paper{--art:url("../assets/ui/hand_icon_drafts/v1/hands/paper.png");--armor-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/paper_armor_mask.png");--light-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/paper_light_mask.png")}
+.lab-hand.hand-rainbow{--art:url("../assets/ui/hand_icon_drafts/v1/hands/rainbow_pistol.png");--armor-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/rainbow_pistol_armor_mask.png");--light-mask-url:url("../assets/ui/hand_ui_lab/v1/masks/rainbow_pistol_light_mask.png")}
+.lab-glow{opacity:.35;filter:drop-shadow(0 0 4px var(--rim))}
+.lab-trace{stroke-dasharray:8 42;animation:lab-travel 3s linear infinite;opacity:.65}
+.lab-gold .lab-glow,.lab-rainbow .lab-glow{animation:lab-breathe 2.6s ease-in-out infinite}
+.lab-gold .lab-field,.lab-rainbow .lab-field{animation:lab-field 3.5s ease-in-out infinite}
+@keyframes lab-travel{to{stroke-dashoffset:-100}}@keyframes lab-breathe{50%{opacity:.85}}@keyframes lab-field{50%{opacity:.32}}
+.selectable-offer{gap:3px;padding:8px 0}.selectable-offer .card.choice{aspect-ratio:1/1.05;min-height:44px}.selectable-offer .card.choice .lab-hand{max-width:none;aspect-ratio:1/1.05}
+.selectable-offer .lab-frame{width:128%;height:128%;left:-14%;top:-14%}
+.selectable-offer .lab-art{width:80%;height:80%;top:34%}.selectable-offer .lab-hand.up .lab-art{top:66%}
+.selectable-offer .choice .ability-mark{right:1px;top:auto;bottom:0}.selectable-offer .choice:nth-child(even) .ability-mark{top:0;bottom:auto}
+.choice:disabled .lab-hand *{animation:none!important}.choice:disabled .lab-glow,.choice:disabled .lab-trace{opacity:0}
+@media(prefers-reduced-motion:reduce){.lab-hand *{animation:none!important}}
+@media(max-width:480px){header .deltrion-title{font-size:1rem}.selectable-offer{gap:2px}.selectable-offer .lab-frame{width:118%;height:118%;left:-9%;top:-9%}.selectable-offer .lab-art{width:77%;height:77%}}

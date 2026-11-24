@@ -88,9 +88,17 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
    };
    timerSchedule(tick,200);
  }
- function handIcon(h,color=null){
-  // Use the approved PNG directly; the CSS selects the appropriate region.
-  return `<span aria-hidden="true" class="hand-icon hand-sprite hand-${h}"></span>`;
+ // HAND UI LAB 01 geometry and separate draft artwork / mask layers.
+ let handId=0;
+ const handPalettes={red:["#e64544","#ffd259"],blue:["#417eea","#57e9ff"],yellow:["#eac044","#5fc9ff"],green:["#779859","#80ff92"],purple:["#a77bdd","#f89afa"]};
+ const handRims={normal:"#50ddfa",strong:"#ff4c55",heal:"#53ef96",gold:"#ffd26b",rainbow:"#d7a2ff"};
+ function handIcon(h,color=null,k=0,state="normal"){
+  const shape=h==="rainbow"?"hex":k%2?"up":"down",id="hand-rim-"+(++handId);
+  const poly={down:"10,15 110,15 60,101.60254",up:"60,15 10,101.60254 110,101.60254",hex:"35,15 85,15 110,58.30127 85,101.60254 35,101.60254 10,58.30127"}[shape];
+  const tint=handPalettes[color]||["#d6dce8","#58e9ff"],c=handRims[state]||handRims.normal;
+  const rim=shape==="hex"?"url(#"+id+")":c;
+  const fill=shape==="hex"?"#29223f":state==="gold"?"#392e1d":state==="strong"?"#352331":state==="heal"?"#173b32":"#122a3d";
+  return `<span aria-hidden="true" class="hand-icon hand-sprite hand-${h} lab-hand ${shape} lab-${state}" style="--armor:${tint[0]};--light:${tint[1]};--rim:${c}"><svg class="lab-frame" viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#ff4566"/><stop offset=".22" stop-color="#ffdc55"/><stop offset=".45" stop-color="#64ff98"/><stop offset=".68" stop-color="#4adfff"/><stop offset="1" stop-color="#b878ff"/></linearGradient></defs><polygon points="${poly}" fill="none" stroke="${rim}" stroke-width="9" opacity=".15"/><polygon points="${poly}" fill="${fill}" stroke="#07131f" stroke-width="5" stroke-linejoin="round"/><polygon class="lab-field" points="${poly}" fill="${rim}" opacity=".08"/><polygon class="lab-glow" points="${poly}" fill="none" stroke="${rim}" stroke-width="5" stroke-linejoin="round"/><polygon points="${poly}" fill="none" stroke="${rim}" stroke-width="1.8" stroke-linejoin="round"/><polygon class="lab-trace" points="${poly}" fill="none" stroke="${rim}" stroke-width="2.8" pathLength="100"/></svg><span class="lab-art"><span class="lab-armor"></span><span class="lab-light"></span></span></span>`;
  }
  function tone(v,i,h,k){
   if(h==="rainbow")return ["rainbow","必勝"];
@@ -126,7 +134,7 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
   const active=playback?.before.step??(v.phase==="resolve"?v.step:-1),done=!playback&&["battle_result","complete","abandoned"].includes(v.phase);
   return `<div class="round-board">${[0,1].map(i=>`<div class="battle-row"><b>${playerLabel(i)}</b>${[0,1,2].map(k=>{
     const l=revealed[k],h=l?.hands[i],cls=k===active?" current":"";
-    return `<div class="battle-slot${cls}${h?" revealed":""}" aria-label="${h?names[h]:done?"未解決":"未公開"}">${h?handIcon(h):done?"—":"?"}</div>`;
+    return `<div class="battle-slot${cls}${h?" revealed":""}" aria-label="${h?names[h]:done?"未解決":"未公開"}">${h?handIcon(h,v.colors[i],k,h==="rainbow"?"rainbow":l.beforeHyper[i]?"gold":l.triggers.some(t=>t.player===i&&t.ability==="strong_attack")?"strong":l.triggers.some(t=>t.player===i&&t.ability==="heal")?"heal":"normal"):done?"—":"?"}</div>`;
    }).join("")}</div>`).join("")}</div>`;
  }
  function readout(l){
@@ -162,17 +170,18 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
  function selectableCards(v){
   return `<span class="sr-only">公開された5枚から、使う順に札をタップ</span><div class="offer selectable-offer">${v.offer.map((h,i)=>{
    const selected=draftSlots.indexOf(i),[t,label]=tone(v,who,h,selected<0?draft.length:selected);
-   return button("card",`${handIcon(h)}<span class="sr-only">${names[h]}・${label}${selected>=0?"・"+(selected+1)+"手目":""}</span>${t==="heal"||t==="gold"?'<span class="ability-mark heal-mark" aria-hidden="true">+</span>':t==="strong"?'<span class="ability-mark strong-mark" aria-hidden="true">✦</span>':label==="あいこ強化"?'<span class="ability-mark tie-mark" aria-hidden="true">Ⅱ</span>':""}${selected>=0?`<span class="slot-order" aria-hidden="true">${selected+1}</span>`:""}`,i,selected>=0||draft.length>=3,"card choice "+t+(selected>=0?" picked":""));
+   return button("card",`${handIcon(h,v.colors[who],i,t)}<span class="sr-only">${names[h]}・${label}${selected>=0?"・"+(selected+1)+"手目":""}</span>${t==="heal"||t==="gold"?'<span class="ability-mark heal-mark" aria-hidden="true">+</span>':t==="strong"?'<span class="ability-mark strong-mark" aria-hidden="true">✦</span>':label==="あいこ強化"?'<span class="ability-mark tie-mark" aria-hidden="true">Ⅱ</span>':""}${selected>=0?`<span class="slot-order" aria-hidden="true">${selected+1}</span>`:""}`,i,selected>=0||draft.length>=3,"card choice "+t+(selected>=0?" picked":""));
   }).join("")}</div><div class="deck-count" aria-label="残りデッキ ${v.remaining.reduce((a,b)=>a+b,0)}枚"><span class="deck-symbol" aria-hidden="true"></span>${v.remaining.reduce((a,b)=>a+b,0)}</div>`;
  }
  function rainbowChoice(v){
   const selected=draftSlots.includes(-1),status=v.rainbow[who],off=draft.length>=3||status!=="ready"||selected;
   const label=selected?"登録済み":status==="ready"?"使用可能":status==="spent"?"使用済み":"未解禁";
-  return `<div class="rainbow-row">${button("rainbow",`${handIcon("rainbow")}<span class="sr-only">虹・${label}</span>${selected?`<span class="slot-order" aria-hidden="true">${draftSlots.indexOf(-1)+1}</span>`:""}`,"",off,"choice rainbow"+(selected?" picked":""))}</div>`;
+  return `<div class="rainbow-row">${button("rainbow",`${handIcon("rainbow",v.colors[who],0,"rainbow")}<span class="sr-only">虹・${label}</span>${selected?`<span class="slot-order" aria-hidden="true">${draftSlots.indexOf(-1)+1}</span>`:""}`,"",off,"choice rainbow"+(selected?" picked":""))}</div>`;
  }
  function resultLabel(w){return w===null?"DRAW":`${playerLabel(w)} WIN`}
  function persist(){if(recorded||!game)return;recorded=true;if(!consent)return;const l=game.exportLog();saved.push(l);try{storage.setItem(key,JSON.stringify(saved))}catch{storageWarning="保存容量・設定の制約があります。JSONを今すぐ保存してください。"}}
  function render(){
+  handId=0;
   let body="";
   if(!game){body=`<h2>ローカル対戦 α</h2><p>5機から3機、BO3、共有デッキ。</p><p class="caption">検証用の暫定性能。対戦記録は匿名の試合ID、編成、手順、勝敗、時刻等をこの端末に保存できます。自動送信はしません。JSONを渡す場合は両者の同意を確認してください。</p>${botChoose?`<h3>BOT対戦（1人）</h3>${button("start-bot","ログ保存に同意して開始","yes",false,"primary")}${button("start-bot","ログなしで開始","no")}`:""}<h3>2人対戦（1台）</h3>${button("start","ログ保存に同意して開始","yes")}${button("start","ログなしで開始","no")}`;}
   else{
@@ -186,12 +195,12 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
     const isRoster=v.phase==="roster",avail=isRoster?Object.keys(colors):v.rosters[who].filter(c=>!v.used[who].includes(c));
     body=`${isRoster?"":roster(v)+battleHeader(v)}<h2>${playerLabel(who)}：${isRoster?"3機編成":"出撃機体を選択"}</h2><p class="caption">${isRoster?`${draft.length}/3 機を選択`:"両者の確定後に公開"}</p><div class="mech-select">${avail.map(c=>button("select",`${robotSVG(colors[c],5)}<b>${colors[c].name}</b><small>${colors[c].ability}</small>`,c,false,draft.includes(c)?"selected":"")).join("")}</div>${button("submit","OK","",!game.legal(who,isRoster?draft:draft[0]),"primary confirm-wide")}`;
    }else if(v.phase==="hands"){
-    body=`${battleHeader(v)}${roster(v)}<h2 class="selection-title">${playerLabel(who)} <span class="sr-only">3手を登録</span> <span>（${draft.length}/3）</span></h2>${selectableCards(v)}<span class="sr-only">登録順（左から解決）</span><div class="register-row"><div class="sequence">${[0,1,2].map(k=>draft[k]?`<div class="card ${tone(v,who,draft[k],k)[0]}">${handIcon(draft[k],colors[v.colors[who]].hex)}<span class="sr-only">${k+1}手目 ${names[draft[k]]}</span></div>`:`<div class="empty">${k+1}</div>`).join("")}</div>${rainbowChoice(v)}</div><div class="register-actions">${button("undo","1手戻す","",!draft.length)}${button("submit","OK","",!game.legal(who,draft),"primary confirm-wide")}</div>`;
+    body=`${battleHeader(v)}${roster(v)}<h2 class="selection-title">${playerLabel(who)} <span class="sr-only">3手を登録</span> <span>（${draft.length}/3）</span></h2>${selectableCards(v)}<span class="sr-only">登録順（左から解決）</span><div class="register-row"><div class="sequence">${[0,1,2].map(k=>draft[k]?`<div class="card ${tone(v,who,draft[k],k)[0]}">${handIcon(draft[k],v.colors[who],k,tone(v,who,draft[k],k)[0])}<span class="sr-only">${k+1}手目 ${names[draft[k]]}</span></div>`:`<div class="empty">${k+1}</div>`).join("")}</div>${rainbowChoice(v)}</div><div class="register-actions">${button("undo","1手戻す","",!draft.length)}${button("submit","OK","",!game.legal(who,draft),"primary confirm-wide")}</div>`;
    }else{
     body=`${battleHeader(v)}${roster(v)}<h2>${v.phase==="battle_result"?"機体戦 "+resultLabel(v.battleResult.winner):v.phase==="round_result"?"ROUND "+v.round+" 完了":"両者の登録完了"}</h2>${roundBoard(v)}${readout(revealed.at(-1))}${v.phase==="resolve"?button("fight","戦闘開始","","","primary"):button("advance",v.phase==="battle_result"?"次の機体戦":"次のラウンド","","","primary")}`;
    }
   }
-  const v=game?.view();root.innerHTML=`<header><strong>ROBOT JANKEN</strong><small>LOCAL α 0.1.8</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`;
+  const v=game?.view();root.innerHTML=`<header><strong class="deltrion-title"><span>電脳拳士</span> DELTRION</strong><small>LOCAL α 0.1.9</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`;
  }
  root.addEventListener("click",e=>{
   const b=e.target.closest("button[data-action]");if(!b||b.disabled)return;const {action,value}=b.dataset;
