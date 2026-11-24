@@ -1,10 +1,11 @@
 // ROBOT JANKEN local alpha: DOM-independent rules; docs/04 and v2 apply_hand.
-const createGame = function createGame({rng=Math.random,now=()=>Date.now(),id="local-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2)}={}){
+const createGame = function createGame({rng=Math.random,now=()=>Date.now(),mode="local",botPolicy=null,id="local-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2)}={}){
  const version="alpha-local-0.1", colors=["red","blue","yellow","green","purple"],hands=["rock","scissors","paper","rainbow"];
  const clone=x=>JSON.parse(JSON.stringify(x)), check=(ok,msg)=>{if(!ok)throw Error(msg)}, pair=()=>[null,null], counts=a=>hands.slice(0,3).map(h=>a.filter(x=>x===h).length);
  const s={phase:"roster",rosters:pair(),used:[[],[]],wins:[0,0],rainbow:["locked","locked"],battle:0,round:0,step:0,colors:pair(),hp:[5,5],hyper:[false,false],greenUsed:[false,false],offer:[],remaining:[5,5,5],last:null,battleResult:null,result:null};
  let pending=pair(),deck=[],sequences=null;
- const log={schema:1,version,id,mode:"local",startedAt:now(),events:[],status:"active"};
+ check(mode==="local"||mode==="local-bot","invalid mode");
+ const log={schema:1,version,id,mode,...(mode==="local-bot"?{botPolicy}:{}),startedAt:now(),events:[],status:"active"};
  let phaseAt=now();
  function event(type,data={}){log.events.push(clone({type,at:now(),battle:s.battle,round:s.round,...data}))}
  function phase(p){s.phase=p;phaseAt=now()}
