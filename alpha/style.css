@@ -75,3 +75,6 @@ header{gap:10px;min-height:62px}header small{margin-left:auto}
 .countdown::before{content:"";position:absolute;inset:5px;background:#0b1d30;border-radius:50%}.countdown-num{position:relative;z-index:1;font-size:1.13rem;line-height:1;font-weight:800}
 .countdown.warning{--timer-color:#ffd257;box-shadow:0 0 8px #f5bd3544}.countdown.critical{--timer-color:#ff5971;box-shadow:0 0 11px #ff597188}.countdown.critical .countdown-num{color:#ffd3d9}
 @media(max-width:480px){header{min-height:54px}header strong{font-size:.9rem}header small{font-size:.64rem}.countdown{width:43px;height:43px;flex-basis:43px}.countdown-num{font-size:1rem}}
+
+/* α 0.1.8: full-width confirmation, separate undo action. */
+button.confirm-wide{display:block;width:100%;min-height:48px;margin:8px 0 0;font-size:1rem;font-weight:800;letter-spacing:.08em;touch-action:manipulation}.register-actions{display:flex;flex-direction:column;gap:6px}.register-actions button[data-action="undo"]{flex:none;align-self:flex-end;margin:0;min-height:44px}.register-actions .confirm-wide{flex:none;margin:0}
