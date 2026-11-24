@@ -238,10 +238,14 @@
   }
   function drawLenses(now){
     lg.setTransform(dpr,0,0,dpr,0,0);lg.clearRect(0,0,W,H);
-    let idx=0;
+    let idx=0;const rows=new Map();
     for(const b of document.querySelectorAll('#app button[data-action]')){
       const action=b.dataset.action;if(['skill','deck-info','close-info'].includes(action))continue;
-      const r=b.getBoundingClientRect();if(r.width<=0||r.height<=0||r.bottom<0||r.top>H)continue;
+      const r=b.getBoundingClientRect();if(r.width<=0||r.height<=0)continue;
+      const group=b.closest?.('.start-actions,.mech-select,.register-actions,footer');
+      let inverse=action==='submit';
+      if(group){let row=rows.get(group);if(!row||Math.abs(row.top-r.top)>2)row={top:r.top,count:0};inverse=row.count++%2===1;rows.set(group,row)}
+      if(r.bottom<0||r.top>H)continue;
       const svg=b.querySelector('.lab-frame');
       if(svg){const rect=svg.getBoundingClientRect(),p=svg.querySelector('.lab-field');if(!p)continue;
         const scale=Math.min(rect.width,rect.height)/120,ox=rect.x+(rect.width-120*scale)/2,oy=rect.y+(rect.height-120*scale)/2;
@@ -249,8 +253,11 @@
         const color=getComputedStyle(svg).getPropertyValue('--rim').trim()||'#78bfd5';
         lensPolygon(pts,b.disabled?'#89939d':color,b.disabled,false,now,idx++,false);
       }else{
-        const x=r.x+1,y=r.y+1,w=r.width-2,h=r.height-2,cut=Math.min(h/Math.sqrt(3),w*.22);
-        const inverse=action==='submit',pts=inverse?[[x,y],[x+w,y],[x+w-cut,y+h],[x+cut,y+h]]:[[x+cut,y],[x+w-cut,y],[x+w,y+h],[x,y+h]];
+        const x=r.x+1,y=r.y+1,w=r.width-2,h=r.height-2;
+        // A trapezoid always has 60-degree sides. Tall mech panels remain rectangular;
+        // if a control is exceptionally narrow, use a rectangle rather than a distorted slope.
+        const cut=action==='select'||w<=2*h/Math.sqrt(3)+4?0:h/Math.sqrt(3);
+        const pts=inverse?[[x,y],[x+w,y],[x+w-cut,y+h],[x+cut,y+h]]:[[x+cut,y],[x+w-cut,y],[x+w,y+h],[x,y+h]];
         const selected=b.classList.contains('selected'),color=b.disabled?'#89939d':selected?'#d3f4ff':'#78bfd5';
         lensPolygon(pts,color,b.disabled,selected,now,idx++,true);
       }

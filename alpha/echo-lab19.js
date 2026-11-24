@@ -112,7 +112,8 @@ function tick(now){
  requestAnimationFrame(tick);if(!ready||document.hidden||now-last<1000/30)return;last=now;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  for(const cv of document.querySelectorAll('.echo-canvas')){
-  let s=states.get(cv);if(!s){s={start:now,mode:motions[cv.dataset.motion]?cv.dataset.motion:'idle',gold:cv.dataset.gold==='true',flash:cv.dataset.flash==='true',t:0};states.set(cv,s)}
+  let s=states.get(cv),mode=motions[cv.dataset.motion]?cv.dataset.motion:'idle',form=cv.dataset.gold==='true',flash=cv.dataset.flash==='true';
+  if(!s||s.mode!==mode||s.gold!==form||s.flash!==flash){s={start:now,mode,gold:form,flash,t:0};states.set(cv,s)}
   const m=motions[s.mode];s.t=reduced?(m.loop?0:1):m.loop?((now-s.start)/m.duration)%1:Math.min(1,(now-s.start)/m.duration);
   gold=s.gold?'gold':'normal';renderUnit(cv,s.mode,s.t,Number(cv.dataset.side));cv.hidden=false;
   cv.parentElement.classList.add('echo-ready');

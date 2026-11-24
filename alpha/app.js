@@ -219,10 +219,32 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
  }
  function resultLabel(w){return w===null?"DRAW":`${playerLabel(w)} WIN`}
  function persist(){if(recorded||!game)return;recorded=true;if(!consent)return;const l=game.exportLog();saved.push(l);try{storage.setItem(key,JSON.stringify(saved))}catch{storageWarning="保存容量・設定の制約があります。JSONを今すぐ保存してください。"}}
+ // Preserve unchanged screen regions and existing ECHO canvas bitmaps on draft/skill taps.
+ let previousMarkup=[];
+ function renderStable(html){
+  if(!root.ownerDocument?.createElement||typeof root.insertBefore!=="function"){root.innerHTML=html;return}
+  const template=root.ownerDocument.createElement("template");template.innerHTML=html;
+  const fresh=[...template.content.children],old=[...root.children],markup=fresh.map(n=>n.outerHTML);
+  const key=cv=>cv.closest(".mech-select")?"selection":"battle-"+cv.dataset.side;
+  const canvases=new Map([...root.querySelectorAll(".echo-canvas:not([hidden])")].map(cv=>[key(cv),cv]));
+  // Keys on detached template nodes still have their local ancestor groups.
+  const nodes=fresh.map((n,i)=>{
+   if(old[i]&&previousMarkup[i]===markup[i])return old[i];
+   for(const cv of n.querySelectorAll(".echo-canvas")){
+    const prior=canvases.get(key(cv));if(!prior)continue;
+    for(const name of ["motion","side","gold","flash"])prior.dataset[name]=cv.dataset[name];
+    const parent=cv.parentElement;cv.replaceWith(prior);parent.classList.add("echo-ready");
+   }
+   return n;
+  });
+  for(let i=0;i<nodes.length;i++)if(root.children[i]!==nodes[i])root.insertBefore(nodes[i],root.children[i]||null);
+  const keep=new Set(nodes);for(const child of [...root.children])if(!keep.has(child))child.remove();
+  previousMarkup=markup;
+ }
  function render(){
   handId=0;
   let body="";
-  if(!game){body=`<h2>ローカル対戦 α</h2><p>5機から3機、BO3、共有デッキ。</p><p class="caption">検証用の暫定性能。対戦記録は匿名の試合ID、編成、手順、勝敗、時刻等をこの端末に保存できます。自動送信はしません。JSONを渡す場合は両者の同意を確認してください。</p>${botChoose?`<h3>BOT対戦（1人）</h3>${button("start-bot","ログ保存に同意して開始","yes",false,"primary")}${button("start-bot","ログなしで開始","no")}`:""}<h3>2人対戦（1台）</h3>${button("start","ログ保存に同意して開始","yes")}${button("start","ログなしで開始","no")}`;}
+  if(!game){body=`<h2>ローカル対戦 α</h2><p>5機から3機、BO3、共有デッキ。</p><p class="caption">検証用の暫定性能。対戦記録は匿名の試合ID、編成、手順、勝敗、時刻等をこの端末に保存できます。自動送信はしません。JSONを渡す場合は両者の同意を確認してください。</p>${botChoose?`<h3>BOT対戦（1人）</h3><div class="start-actions">${button("start-bot","ログ保存に同意して開始","yes",false,"primary")}${button("start-bot","ログなしで開始","no")}</div>`:""}<h3>2人対戦（1台）</h3><div class="start-actions">${button("start","ログ保存に同意して開始","yes")}${button("start","ログなしで開始","no")}</div>`;}
   else{
    const v=game.view(who);
    if(playback){
@@ -239,7 +261,7 @@ const boot = function boot({root,createGame,robotSVG,storage,download,confirmRes
     body=`${battleHeader(v)}${roster(v)}<h2>${v.phase==="battle_result"?"機体戦 "+resultLabel(v.battleResult.winner):v.phase==="round_result"?"ROUND "+v.round+" 完了":"両者の登録完了"}</h2>${roundBoard(v)}${readout(revealed.at(-1))}${v.phase==="resolve"?button("fight","戦闘開始","","","primary"):button("advance",v.phase==="battle_result"?"次の機体戦":"次のラウンド","","","primary")}`;
    }
   }
-  const v=game?.view();root.innerHTML=`<header><strong class="deltrion-title"><span>電脳拳士</span> DELTRION</strong><small>LOCAL α 0.1.13</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`;
+  const v=game?.view();renderStable(`<header><strong class="deltrion-title"><span>電脳拳士</span> DELTRION</strong><small>LOCAL α 0.1.14</small>${timerVisual()}</header>${v&&v.battle?`<div class="caption">機体戦 ${v.battle}/3 ・ ROUND ${v.round}/3</div>`:""}${body}<footer>${game&&!playback&&!["complete","abandoned"].includes(v.phase)?button("abandon","対戦中断"):""}${!playback&&(!game||["complete","abandoned"].includes(v?.phase))?button("export",`ログJSON保存 (${saved.length})`,"",!saved.length):""}${storageWarning?`<p>${storageWarning}</p>`:""}</footer>`);
  }
  root.addEventListener("click",e=>{
   const b=e.target.closest("button[data-action]");if(!b||b.disabled)return;const {action,value}=b.dataset;
