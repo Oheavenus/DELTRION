@@ -90,6 +90,8 @@ const createGame = function createGame({rng=Math.random,now=()=>Date.now(),mode=
  }
  function exportLog(){check(log.status!=="active","finish or abandon before exporting");return clone(log)}
  function abandon(){if(log.status==="active"){event("abandon",{phase:s.phase,wins:s.wins});log.status="abandoned";log.endedAt=now();phase("abandoned")}return exportLog()}
- return {view,legal,submit,advance,exportLog,abandon,version};
+ // Only the hand currently being resolved may be disclosed, never future selections.
+ function currentHands(){return s.phase==="resolve"?sequences.map(a=>a[s.step]):null}
+ return {view,legal,submit,advance,exportLog,abandon,version,currentHands};
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = {createGame};
